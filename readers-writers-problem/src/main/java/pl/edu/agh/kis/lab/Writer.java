@@ -1,4 +1,8 @@
 package pl.edu.agh.kis.lab;
 
-public class Writer {
+public class Writer extends Thread{
+    @Override
+    public void run() {
+
+    }
 }
