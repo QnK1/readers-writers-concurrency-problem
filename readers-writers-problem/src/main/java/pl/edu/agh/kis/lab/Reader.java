@@ -1,31 +1,44 @@
 package pl.edu.agh.kis.lab;
 
+import lombok.Getter;
+
 import java.util.Random;
 
+@Getter
 public class Reader extends Thread{
     private final Library library;
-    private final int id;
+    private final String readerName;
+    private final Random random;
 
-    public Reader(Library library, int id) {
+    public Reader(Library library, String id) {
         this.library = library;
-        this.id = id;
+        this.readerName = id;
+        this.random = new Random();
     }
 
     @Override
     public void run() {
-        Random random = new Random();
-
         while(true){
-            System.out.println("Chce czytac " + id);
-            library.requestRead(this);
-            try{
-                Thread.sleep(random.nextInt(2000) + 1000);
+            try {
+                Thread.sleep(random.nextInt(2000) + (long) 1000);
+
+                System.out.println("\nI want to read " + readerName);
+                System.out.print(library.getCurrentInfo());
+                System.out.println();
+
+                library.requestRead(this);
+
+                Thread.sleep(random.nextInt(2000) + (long) 1000);
+
+                System.out.println("\nI have finished reading " + readerName);
+                System.out.print(library.getCurrentInfo());
+                System.out.println();
+
+                library.finishRead(this);
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                Thread.currentThread().interrupt();
+                throw new ReaderThreadInterruptedException(e);
             }
-            System.out.println("Koncze czytac " + id);
-            library.finishRead(this);
-            System.out.println(library.getNumberOfReaders() + " " + library.isWriting());
         }
     }
 }
