@@ -4,8 +4,12 @@ import lombok.Getter;
 
 import java.util.Random;
 
+/**
+ * Represents a reader in the library system who can perform reading operations.
+ * A reader runs in its own thread and interacts with the library to request and finish reading.
+ */
 @Getter
-public class Reader extends Thread{
+public class Reader extends Thread {
     private final Library library;
     private final String readerName;
     private final Random random;
@@ -14,6 +18,14 @@ public class Reader extends Thread{
     private final int minTime;
     private final int maxTime;
 
+    /**
+     * Constructs a Reader instance with the specified library, reader ID, and time bounds.
+     *
+     * @param library  the library this reader interacts with
+     * @param id       the unique name or identifier of the reader
+     * @param minTime  the minimum time (in milliseconds) the reader spends reading or waiting
+     * @param maxTime  the maximum time (in milliseconds) the reader spends reading or waiting
+     */
     public Reader(Library library, String id, int minTime, int maxTime) {
         this.library = library;
         this.readerName = id;
@@ -24,6 +36,15 @@ public class Reader extends Thread{
         libraryInfoManager = new LibraryInfoManager(library);
     }
 
+    /**
+     * Constructs a Reader instance with the specified library, reader ID, time bounds, and iteration count.
+     *
+     * @param library    the library this reader interacts with
+     * @param id         the unique name or identifier of the reader
+     * @param minTime    the minimum time (in milliseconds) the reader spends reading or waiting
+     * @param maxTime    the maximum time (in milliseconds) the reader spends reading or waiting
+     * @param iterations the number of iterations the reader performs; 0 for infinite iterations
+     */
     public Reader(Library library, String id, int minTime, int maxTime, int iterations) {
         this.library = library;
         this.readerName = id;
@@ -34,12 +55,17 @@ public class Reader extends Thread{
         libraryInfoManager = new LibraryInfoManager(library);
     }
 
+    /**
+     * Executes the reading process for the reader.
+     * The reader alternates between waiting, requesting to read, and finishing reading,
+     * according to the specified time bounds and number of iterations.
+     */
     @Override
     public void run() {
         boolean condition = true;
         int i = 0;
 
-        while(condition) {
+        while (condition) {
             try {
                 Thread.sleep(random.nextInt(maxTime - minTime) + (long) minTime);
 
@@ -65,10 +91,10 @@ public class Reader extends Thread{
                 throw new ReaderThreadInterruptedException(e);
             }
 
-            if(nOfIterations != 0){
+            if (nOfIterations != 0) {
                 ++i;
 
-                if(i == nOfIterations){
+                if (i == nOfIterations) {
                     condition = false;
                 }
             }
