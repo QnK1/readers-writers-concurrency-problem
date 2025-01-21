@@ -9,35 +9,68 @@ public class Reader extends Thread{
     private final Library library;
     private final String readerName;
     private final Random random;
+    private final int nOfIterations;
+    private final LibraryInfoManager libraryInfoManager;
+    private final int minTime;
+    private final int maxTime;
 
-    public Reader(Library library, String id) {
+    public Reader(Library library, String id, int minTime, int maxTime) {
         this.library = library;
         this.readerName = id;
         this.random = new Random();
+        this.nOfIterations = 0;
+        this.minTime = minTime;
+        this.maxTime = maxTime;
+        libraryInfoManager = new LibraryInfoManager(library);
+    }
+
+    public Reader(Library library, String id, int minTime, int maxTime, int iterations) {
+        this.library = library;
+        this.readerName = id;
+        this.random = new Random();
+        this.nOfIterations = Math.max(iterations, 0);
+        this.minTime = minTime;
+        this.maxTime = maxTime;
+        libraryInfoManager = new LibraryInfoManager(library);
     }
 
     @Override
     public void run() {
-        while(true){
-            try {
-                Thread.sleep(random.nextInt(2000) + (long) 1000);
+        boolean condition = true;
+        int i = 0;
 
-                System.out.println("\nI want to read " + readerName);
-                System.out.print(library.getCurrentInfo());
+        while(condition) {
+            try {
+                Thread.sleep(random.nextInt(maxTime - minTime) + (long) minTime);
+
+                library.acquireInfoLock();
+                System.out.println("\n" + readerName + " wants to read");
+                System.out.print(libraryInfoManager.getLibraryInfo());
                 System.out.println();
+                library.releaseInfoLock();
 
                 library.requestRead(this);
 
-                Thread.sleep(random.nextInt(2000) + (long) 1000);
+                Thread.sleep(random.nextInt(maxTime - minTime) + (long) minTime);
 
-                System.out.println("\nI have finished reading " + readerName);
-                System.out.print(library.getCurrentInfo());
+                library.acquireInfoLock();
+                System.out.println("\n" + readerName + " has finished reading");
+                System.out.print(libraryInfoManager.getLibraryInfo());
                 System.out.println();
+                library.releaseInfoLock();
 
                 library.finishRead(this);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new ReaderThreadInterruptedException(e);
+            }
+
+            if(nOfIterations != 0){
+                ++i;
+
+                if(i == nOfIterations){
+                    condition = false;
+                }
             }
         }
     }

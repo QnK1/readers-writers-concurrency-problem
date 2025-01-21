@@ -9,30 +9,55 @@ public class Writer extends Thread{
     private final Library library;
     private final String writerName;
     private final Random random;
+    private final int nOfIterations;
+    private final LibraryInfoManager libraryInfoManager;
+    private final int minTime;
+    private final int maxTime;
 
-    public Writer(Library library, String id) {
+    public Writer(Library library, String id, int minTime, int maxTime) {
         this.library = library;
         this.writerName = id;
         this.random = new Random();
+        this.nOfIterations = 0;
+        this.minTime = minTime;
+        this.maxTime = maxTime;
+        this.libraryInfoManager = new LibraryInfoManager(library);
+    }
+
+    public Writer(Library library, String id, int minTime, int maxTime, int iterations) {
+        this.library = library;
+        this.writerName = id;
+        this.random = new Random();
+        this.minTime = minTime;
+        this.maxTime = maxTime;
+        this.nOfIterations = Math.max(iterations, 0);
+        this.libraryInfoManager = new LibraryInfoManager(library);
     }
 
     @Override
     public void run() {
-        while(true){
-            try {
-                Thread.sleep(random.nextInt(2000) + (long) 1000);
+        boolean condition = true;
+        int i = 0;
 
-                System.out.println("\nI want to write " + writerName);
-                System.out.print(library.getCurrentInfo());
+        while(condition){
+            try {
+                Thread.sleep(random.nextInt(maxTime - minTime) + (long) minTime);
+
+                library.acquireInfoLock();
+                System.out.println("\n" + writerName + " wants to write");
+                System.out.print(libraryInfoManager.getLibraryInfo());
                 System.out.println();
+                library.releaseInfoLock();
 
                 library.requestWrite(this);
 
-                Thread.sleep(random.nextInt(2000) + (long) 1000);
+                Thread.sleep(random.nextInt(maxTime - minTime) + (long) minTime);
 
-                System.out.println("\nI have finished writing " + writerName);
-                System.out.print(library.getCurrentInfo());
+                library.acquireInfoLock();
+                System.out.println("\n" + writerName + " has finished writing");
+                System.out.print(libraryInfoManager.getLibraryInfo());
                 System.out.println();
+                library.releaseInfoLock();
 
                 library.finishWrite(this);
             } catch (InterruptedException e) {
@@ -40,7 +65,13 @@ public class Writer extends Thread{
                 throw new WriterThreadInterruptedException(e);
             }
 
+            if(nOfIterations != 0){
+                ++i;
 
+                if(i == nOfIterations){
+                    condition = false;
+                }
+            }
         }
     }
 }

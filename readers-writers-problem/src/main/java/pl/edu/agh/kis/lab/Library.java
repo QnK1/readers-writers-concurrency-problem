@@ -105,30 +105,17 @@ public class Library {
         resourceSemaphore.release(maxReaderCount);
     }
 
-    public String getCurrentInfo(){
+    public void acquireInfoLock(){
         try {
             infoSemaphore.acquire(1);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException(e);
+            throw new WriterThreadInterruptedException(e);
         }
-        StringBuilder sb = new StringBuilder();
-        sb.append("Current readers count: ").append(currentReaders.size()).append("\n");
-        sb.append("Current readers: ");
-        for(Reader reader : getCurrentReaders()){
-            sb.append(reader.getReaderName()).append(" ");
-        }
-        sb.append("\n");
-        sb.append("Current writer: ").append(currentWriter == null ? "None" : currentWriter.getWriterName());
-        sb.append("\n");
-        sb.append("Current queue size: ").append(currentQueue.size()).append("\n");
-        sb.append("Current queue: ");
-        for(String s : currentQueue){
-            sb.append(s).append(" ");
-        }
+    }
 
+    public void releaseInfoLock(){
         infoSemaphore.release(1);
-        return sb.toString();
     }
 
     private boolean verifyAndUpdateFinishingReader(Reader reader) {
